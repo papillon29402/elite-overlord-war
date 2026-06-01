@@ -103,17 +103,21 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
         ],
       });
     }
-    
+
     const ticketNumber = await getNextTicketNumber(guild.id);
     
-    let channelName = `ticket-${ticketNumber}`;
-    
-    if (priority !== 'none') {
-      const priorityInfo = PRIORITY_MAP[priority];
-      if (priorityInfo) {
-        channelName = `${priorityInfo.emoji} ${channelName}`;
-      }
-    }
+    const username = member.user.username
+  .toLowerCase()
+  .replace(/[^a-z0-9-]/g, '');
+
+let channelName = `tryout-${ticketNumber}-${username}`;
+
+if (priority !== 'none') {
+  const priorityInfo = PRIORITY_MAP[priority];
+  if (priorityInfo) {
+    channelName = `${priorityInfo.emoji} ${channelName}`;
+  }
+}
     
     const channel = await guild.channels.create({
       name: channelName,
@@ -161,9 +165,12 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     const priorityInfo = PRIORITY_MAP[priority] || PRIORITY_MAP.none;
     
     const embed = createEmbed({
-      title: `Ticket #${ticketNumber}`,
-      description: `${member.toString()}, thanks for creating a ticket!\n\n**Reason:** ${reason}\n**Priority:** ${priorityInfo.emoji} ${priorityInfo.label}`,
+      title: `Tryout #${ticketNumber}`,
+      description: `${member.toString()}, merci d'avoir ouvert un ticket un tryouter te prendras en charge bientot\n\n**bounty/region/build/1V1/2V2/3V3 :** ${reason}\n**Priority:** ${priorityInfo.emoji} ${priorityInfo.label}`,
       color: priorityInfo.color,
+      image: {
+    url: 'https://thfvnext.bing.com/th/id/OIP.vQqYiLL-mzcrYOBpwNurQwHaD4?w=340&h=180&c=7&r=0&o=7&cb=thfvnextfalcon&pid=1.7&rm=3'
+  },
       fields: [
         { name: 'Status', value: '🟢 Open', inline: true },
         { name: 'Claimed By', value: 'Not claimed', inline: true },
@@ -204,8 +211,13 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
       );
     }
     
-    const staffMention = config.ticketStaffRoleId ? ` <@&${config.ticketStaffRoleId}>` : '';
-    const messageContent = `${member.toString()}${staffMention}`;
+const AUTO_ROLE_ID = "";
+
+const staffMention = config.ticketStaffRoleId
+  ? ` <@&${config.ticketStaffRoleId}>`
+  : '';
+
+const messageContent = `${member.toString()} ${AUTO_ROLE_ID}${staffMention}`;
     
     const ticketMessage = await channel.send({ 
       content: messageContent,
@@ -297,8 +309,8 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
         const ticketCreator = await channel.client.users.fetch(ticketData.userId).catch(() => null);
         if (ticketCreator) {
           const dmEmbed = createEmbed({
-            title: '🎫 Your Ticket Has Been Closed',
-            description: `Your ticket **${channel.name}** has been closed.\n\n**Reason:** ${reason}\n**Closed by:** ${closer.tag}\n**Closed at:** <t:${Math.floor(Date.now() / 1000)}:F>\n\nThank you for using our support system! If you have any further questions, feel free to create a new ticket.`,
+            title: '🎫 ton ticket a été fermée',
+            description: `ton ticket **${channel.name}** a été fermée.\n\n**Reason:** ${reason}\n**Closed by:** ${closer.tag}\n**Closed at:** <t:${Math.floor(Date.now() / 1000)}:F>\n\nmerci d'avoir ouvert un ticket n'hesite pas a en re ouvrir un plus tard.`,
             color: '#e74c3c',
             footer: { text: `Ticket ID: ${ticketData.id}` }
           });
@@ -308,10 +320,10 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
           // Post-close feedback survey — separate DM message so it can be updated on submit
           try {
             const feedbackEmbed = createEmbed({
-              title: '⭐ How was your support experience?',
-              description: `We'd love to know how we did with **${channel.name}**.\nSelect a rating below — it only takes a second!`,
+              title: '⭐ comment evalurait tu notre travail',
+              description: ` **${channel.name}**.\n`,
               color: '#F1C40F',
-              footer: { text: 'Your feedback helps us improve.' },
+              footer: { text: 'bonne journée' },
             });
 
             const base = `ticket_feedback:${channel.guild.id}:${channel.id}`;
@@ -393,8 +405,8 @@ components: []
     }
     
     const closeEmbed = createEmbed({
-      title: 'Ticket Closed',
-      description: `This ticket has been closed by ${closer}.\n**Reason:** ${reason}${dmOnClose ? '\n\n📩 A DM has been sent to the ticket creator.' : ''}`,
+      title: 'Ticket fermée',
+      description: `ce ticket a été fermée par ${closer}.\n**Reason:** ${reason}${dmOnClose ? '\n\n📩 un DM a été envoyer au createur du ticket.' : ''}`,
       color: '#e74c3c',
       footer: { text: `Ticket ID: ${ticketData.id}` }
     });
@@ -402,12 +414,12 @@ components: []
     const controlRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('ticket_reopen')
-        .setLabel('Reopen Ticket')
+        .setLabel('Reouvrir Ticket')
         .setStyle(ButtonStyle.Success)
         .setEmoji('🔓'),
       new ButtonBuilder()
         .setCustomId('ticket_delete')
-        .setLabel('Delete Ticket')
+        .setLabel('suprimer Ticket')
         .setStyle(ButtonStyle.Danger)
         .setEmoji('🗑️')
     );
@@ -461,13 +473,13 @@ export async function claimTicket(channel, claimer) {
   try {
     const ticketData = await getTicketData(channel.guild.id, channel.id);
     if (!ticketData) {
-      return { success: false, error: 'This is not a ticket channel' };
+      return { success: false, error: 'C pas un salon de ticket' };
     }
     
     if (ticketData.claimedBy) {
       return { 
         success: false, 
-        error: `This ticket is already claimed by <@${ticketData.claimedBy}>` 
+        error: `le ticket est deja claim par <@${ticketData.claimedBy}>` 
       };
     }
     
@@ -516,8 +528,8 @@ export async function claimTicket(channel, claimer) {
     }
     
     const claimEmbed = createEmbed({
-      title: 'Ticket Claimed',
-      description: `🎉 ${claimer} has claimed this ticket!`,
+      title: 'Ticket Claim',
+      description: `🎉 ${claimer} a claim le ticket!`,
       color: '#2ecc71'
     });
     
@@ -678,8 +690,8 @@ export async function reopenTicket(channel, reopener) {
     }
     
     const reopenEmbed = createEmbed({
-      title: 'Ticket Reopened',
-      description: `🔓 ${reopener} has reopened this ticket!`,
+      title: 'Ticket Reouvert',
+      description: `🔓 ${reopener} a reouvert le ticket!`,
       color: '#2ecc71'
     });
 
@@ -831,8 +843,8 @@ export async function deleteTicket(channel, deleter) {
     }
     
     const deleteEmbed = createEmbed({
-      title: 'Ticket Deleted',
-      description: `🗑️ This ticket will be permanently deleted in ${TICKET_DELETE_DELAY_SECONDS} seconds.`,
+      title: 'Ticket suprimer ',
+      description: `🗑️ ce ticket seras suprimer dans ${TICKET_DELETE_DELAY_SECONDS} seconds.`,
       color: '#e74c3c',
       footer: { text: `Ticket ID: ${ticketData.id}` }
     });
@@ -1074,8 +1086,8 @@ export async function unclaimTicket(channel, unclaimer) {
     
     if (claimMessage) {
       const unclaimEmbed = createEmbed({
-        title: 'Ticket Unclaimed',
-        description: `🔓 ${unclaimer} has unclaimed this ticket!`,
+        title: 'Ticket Unclaim',
+        description: `🔓 ${unclaimer} a unclaim ce ticket!`,
         color: '#f39c12'
       });
       
@@ -1085,8 +1097,8 @@ export async function unclaimTicket(channel, unclaimer) {
       });
     } else {
       const unclaimEmbed = createEmbed({
-        title: 'Ticket Unclaimed',
-        description: `🔓 ${unclaimer} has unclaimed this ticket!`,
+        title: 'Ticket Unclaim',
+        description: `🔓 ${unclaimer} a unclaim ce ticket!`,
         color: '#f39c12'
       });
       
@@ -1240,6 +1252,3 @@ export async function updateTicketPriority(channel, priority, updater) {
     };
   }
 }
-
-
-
