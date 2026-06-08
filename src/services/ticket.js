@@ -168,7 +168,7 @@ if (priority !== 'none') {
       title: `war #${ticketNumber}`,
       description: `${member.toString()},thanks for creating a war ticket !\n\n**crew/region :** ${reason}\ `,
       image: {
-    url: 'https://thfvnext.bing.com/th/id/OIP.vQqYiLL-mzcrYOBpwNurQwHaD4?w=340&h=180&c=7&r=0&o=7&cb=thfvnextfalcon&pid=1.7&rm=3'
+    url: 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcTDyNO7NtUn31-cUgw8MiLBVLA0MJlk3OvSqga1PkfVmdmnzZTd'
   },
       fields: [
         { name: 'Status', value: '🟢 Open', inline: true },
